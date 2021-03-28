@@ -4,7 +4,7 @@
 # PyDBG
 # Copyright (C) 2006 Pedram Amini <pedram.amini@gmail.com>
 #
-# $Id: pydbg.py 253 2011-01-24 19:13:57Z my.name.is.sober $
+# $Id: .py 253 2011-01-24 19:13:57Z my.name.is.sober $
 #
 # This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later
@@ -32,9 +32,9 @@ import struct
 import pydasm
 import socket
 
-from pydbg.my_ctypes  import *
-from pydbg.defines    import *
-from pydbg.windows_h  import *
+from .my_ctypes  import *
+from .defines    import *
+from .windows_h  import *
 
 # macos compatability.
 try:
@@ -46,13 +46,13 @@ except:
     kernel32 = CDLL(os.path.join(os.path.dirname(__file__), "libmacdll.dylib"))
     advapi32 = kernel32
 
-from pydbg.breakpoint              import *
-from pydbg.hardware_breakpoint     import *
-from pydbg.memory_breakpoint       import *
-from pydbg.memory_snapshot_block   import *
-from pydbg.memory_snapshot_context import *
-from pydbg.pdx                     import *
-from pydbg.system_dll              import *
+from .breakpoint              import *
+from .hardware_breakpoint     import *
+from .memory_breakpoint       import *
+from .memory_snapshot_block   import *
+from .memory_snapshot_context import *
+from .pdx                     import *
+from .system_dll              import *
 
 class pydbg:
     '''
@@ -1256,11 +1256,11 @@ class pydbg:
 
         Example::
 
-            for (pid, name) in pydbg.enumerate_processes():
+            for (pid, name) in .enumerate_processes():
                 if name == "test.exe":
                     break
 
-            pydbg.attach(pid)
+            .attach(pid)
         '''
 
         self._log("enumerate_processes()")
@@ -1445,7 +1445,7 @@ class pydbg:
         This is the default LOAD_DLL_DEBUG_EVENT handler. You can access the last loaded dll in your callback handler
         with the following example code::
 
-            last_dll = pydbg.get_system_dll(-1)
+            last_dll = .get_system_dll(-1)
             print("loading:%s from %s into:%08x size:%d" % (last_dll.name, last_dll.path, last_dll.base, last_dll.size))
 
         The get_system_dll() routine is preferred over directly accessing the internal data structure for proper and
@@ -1530,7 +1530,7 @@ class pydbg:
         @return: Debug event continue status.
         '''
 
-        self._log("pydbg.exception_handler_breakpoint() at %08x from thread id %d" % (self.exception_address, self.dbg.dwThreadId))
+        self._log(".exception_handler_breakpoint() at %08x from thread id %d" % (self.exception_address, self.dbg.dwThreadId))
 
         # breakpoints we did not set.
         if not self.bp_is_ours(self.exception_address):
@@ -1598,7 +1598,7 @@ class pydbg:
         @return: Debug event continue status.
         '''
 
-        self._log("pydbg.exception_handler_guard_page()")
+        self._log(".exception_handler_guard_page()")
 
         # determine the base address of the page where the offending reference resides.
         mbi = self.virtual_query(self.violation_address)
@@ -1650,7 +1650,7 @@ class pydbg:
         @return: Debug event continue status.
         '''
 
-        self._log("pydbg.exception_handler_single_step()")
+        self._log(".exception_handler_single_step()")
 
         # if there is a breakpoint to restore.
         if self._restore_breakpoint:

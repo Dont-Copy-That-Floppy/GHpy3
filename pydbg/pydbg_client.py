@@ -14,10 +14,14 @@
 '''
 
 import socket
-import pickle
+import sys
+if(sys.version_info.major == 3):
+    import pickle as cPickle
+else:
+    import cPickle
 
-from pydbg.defines import *
-from pydbg.pdx     import *
+from .defines import *
+from .pdx     import *
 
 class pydbg_client:
     '''
@@ -146,7 +150,7 @@ class pydbg_client:
         See the notes for __getattr__ for related notes. This method is called, in the Ruby fashion, with the method
         name and arguments for any requested but undefined class method. We utilize this method to transparently wrap
         requested PyDBG routines, transmit the method name and arguments to the server, then grab and return the methods
-        return value. This transparency allows us to modify pydbg.py freely without having to add support for newly
+        return value. This transparency allows us to modify .py freely without having to add support for newly
         created methods to pydbg_client.py. Methods that require "special" attention and can not simply be mirrored are
         individually overridden and handled separately.
 
@@ -164,7 +168,7 @@ class pydbg_client:
         # some functions shouldn't go over the network.
         # XXX - there may be more routines we have to add to this list.
         if method_name in ("hex_dump", "flip_endian", "flip_endian_dword"):
-            exec("method_pointer = self.pydbg.%s" % method_name)
+            exec("method_pointer = self..%s" % method_name)
             ret = method_pointer(*args, **kwargs)
         else:
             self.pickle_send((method_name, (args, kwargs)))
@@ -235,7 +239,7 @@ class pydbg_client:
         '''
         Overriden callback setting routing. A transparent mirror here with method_missing() would not do. We save the
         requested callback address / exception code pair and then tell the PyDbg server about it. For more information
-        see the documentation of pydbg.set_callback().
+        see the documentation of .set_callback().
 
         @type  exception_code: Long
         @param exception_code: Exception code to establish a callback for
