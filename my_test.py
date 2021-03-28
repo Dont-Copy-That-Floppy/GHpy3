@@ -1,21 +1,38 @@
 import my_debugger
 from my_debugger_defines import *
+from multiprocessing import Pool, Process
+import sys
+import printf_random
 
 debugger = my_debugger.debugger()
-pid = input("Enter the PID of the process to attach to: ")
-debugger.attach(int(pid))
-printf_address = debugger.func_resolve("msvcrt.dll", "printf")
-print("[*] Address of printf: 0x%08x" % printf_address)
-# soft breakpoint
-# debugger.bp_set(printf_address)
-# hard breakpoint
-#debugger.bp_set_hw(printf, 1, HW_EXECUTE)
-debugger.run()
-debugger.detach()
+pid = 0
 
 
-def test():
-    debugger.load("calc32.exe")
+def static_load():
+    print("Loading static PID debugger using calc.exe...")
+    if(sys.maxsize > 2**32):
+        debugger.load("C:\Windows\SysWOW64\calc.exe")
+    else:
+        debugger.load("C:\Windows\System32\calc.exe")
+    debugger.run()
+    debugger.detach()
+
+
+def printf_infinite():
+    import printf_loop
+
+
+def dyn_load(pid=None):
+    print("Loading dynamic PID debugger...")
+    debugger.attach(int(pid))
+    printf_address = debugger.func_resolve("msvcrt.dll", "printf")
+    print("[*] Address of printf: 0x%08x" % printf_address)
+    # soft breakpoint
+    # debugger.bp_set(printf_address)
+    # hard breakpoint
+    # debugger.bp_set_hw(printf, 1, HW_EXECUTE)
+    debugger.run()
+    debugger.detach()
 
 
 def getRegs():
@@ -34,3 +51,25 @@ def getRegs():
         print("[**] ECX: 0x%08x" % thread_context.Ecx)
         print("[**] EDX: 0x%08x" % thread_context.Edx)
         print("[*] END DUMP")
+
+
+if __name__ == '__main__':
+    if(len(sys.argv) > 1):
+        processes = []
+        if(len(sys.argv) > 2):
+            pid = int(input("Enter the PID of the process to attach to: "))
+        else:
+            p1 = Process(target=printf_infinite)
+            p1.start()
+            pid = p1.pid
+
+        if(sys.argv[1] == 'pydbg'):
+            p0 = Process(target=printf_random.run, args=(pid,))
+        elif(sys.argv[1][:3] == 'dyn'):
+            p0 = Process(target=dyn_load, args=(pid,))
+
+        p0.start()
+        p0.join()
+        p1.join()
+    else:
+        static_load()
