@@ -9,7 +9,7 @@ print("[*] Address of printf: 0x%08x" % printf_address)
 # soft breakpoint
 # debugger.bp_set(printf_address)
 # hard breakpoint
-debugger.bp_set_hw(printf, 1, HW_EXECUTE)
+#debugger.bp_set_hw(printf, 1, HW_EXECUTE)
 debugger.run()
 debugger.detach()
 

@@ -1935,6 +1935,7 @@ class pydbg:
         token_state = TOKEN_PRIVILEGES()
 
         self._log("get_debug_privileges()")
+        print(h_token)
 
         if not advapi32.OpenProcessToken(kernel32.GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, byref(h_token)):
             raise pdx("OpenProcessToken()", True)
