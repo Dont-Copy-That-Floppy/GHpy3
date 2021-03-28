@@ -30,7 +30,7 @@ def printf_randomizer(dbg):
 # Instantiate the pydbg class
 dbg = pydbg()
 # Now enter the PID of the printf_loop.py process
-pid = raw_input("Enter the printf_loop.py PID: ")
+pid = input("Enter the printf_loop.py PID: ")
 # Attach the debugger to that process
 dbg.attach(int(pid))
 # Set the breakpoint with the printf_randomizer function defined as a callback

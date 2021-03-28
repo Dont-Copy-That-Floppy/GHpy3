@@ -32,9 +32,9 @@ import struct
 import pydasm
 import socket
 
-from my_ctypes  import *
-from defines    import *
-from windows_h  import *
+from pydbg.my_ctypes  import *
+from pydbg.defines    import *
+from pydbg.windows_h  import *
 
 # macos compatability.
 try:
@@ -46,13 +46,13 @@ except:
     kernel32 = CDLL(os.path.join(os.path.dirname(__file__), "libmacdll.dylib"))
     advapi32 = kernel32
 
-from breakpoint              import *
-from hardware_breakpoint     import *
-from memory_breakpoint       import *
-from memory_snapshot_block   import *
-from memory_snapshot_context import *
-from pdx                     import *
-from system_dll              import *
+from pydbg.breakpoint              import *
+from pydbg.hardware_breakpoint     import *
+from pydbg.memory_breakpoint       import *
+from pydbg.memory_snapshot_block   import *
+from pydbg.memory_snapshot_context import *
+from pydbg.pdx                     import *
+from pydbg.system_dll              import *
 
 class pydbg:
     '''
