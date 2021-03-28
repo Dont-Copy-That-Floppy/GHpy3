@@ -46,7 +46,7 @@ class debugger():
         # which is just the size of the struct itself
         startupinfo.cb = sizeof(startupinfo)
 
-        if kernel32.CreateProcessA(path_to_exe, None, None, None, None,
+        if kernel32.CreateProcessW(path_to_exe, None, None, None, None,
                                    creation_flags, None, None,
                                    byref(startupinfo),
                                    byref(process_information)):
@@ -55,8 +55,7 @@ class debugger():
             print("[*] The Process ID I have is: %d" %
                   process_information.dwProcessId)
             self.pid = process_information.dwProcessId
-            self.h_process = self.open_process(
-                self, process_information.dwProcessId)
+            self.h_process = self.open_process(process_information.dwProcessId)
             self.debugger_active = True
         else:
             print("[*] Error with error code %d." % kernel32.GetLastError())

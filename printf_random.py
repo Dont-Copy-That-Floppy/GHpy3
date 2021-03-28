@@ -26,16 +26,17 @@ def printf_randomizer(dbg):
 
     return DBG_CONTINUE
 
-
-# Instantiate the pydbg class
-dbg = pydbg()
-# Now enter the PID of the printf_loop.py process
-pid = input("Enter the printf_loop.py PID: ")
-# Attach the debugger to that process
-dbg.attach(int(pid))
-# Set the breakpoint with the printf_randomizer function defined as a callback
-printf_address = dbg.func_resolve("msvcrt", "printf")
-dbg.bp_set(printf_address, description="printf_address",
-           handler=printf_randomizer)
-# Resume the process
-dbg.run()
+def run(pid=None):
+    # Instantiate the pydbg class
+    dbg = pydbg()
+    # Now enter the PID of the printf_loop.py process
+    if(pid == None):
+        pid = input("Enter the printf_loop.py PID: ")
+    # Attach the debugger to that process
+    dbg.attach(int(pid))
+    # Set the breakpoint with the printf_randomizer function defined as a callback
+    printf_address = dbg.func_resolve("msvcrt", "printf")
+    dbg.bp_set(printf_address, description="printf_address",
+            handler=printf_randomizer)
+    # Resume the process
+    dbg.run()

@@ -1931,11 +1931,11 @@ class pydbg:
         '''
 
         h_token     = HANDLE()
+        print(h_token)
         luid        = LUID()
         token_state = TOKEN_PRIVILEGES()
 
         self._log("get_debug_privileges()")
-        print(h_token)
 
         if not advapi32.OpenProcessToken(kernel32.GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, byref(h_token)):
             raise pdx("OpenProcessToken()", True)
@@ -2426,16 +2426,10 @@ class pydbg:
         if create_new_console:
             creation_flags |= CREATE_NEW_CONSOLE
 
-        success = kernel32.CreateProcessA(c_char_p(path_to_file),
-                                          c_char_p(command_line),
-                                          0,
-                                          0,
-                                          0,
-                                          creation_flags,
-                                          0,
-                                          0,
-                                          byref(si),
-                                          byref(pi))
+        success = kernel32.CreateProcessW(c_char_p(path_to_file), c_char_p(command_line),
+                                          0, 0, 0,
+                                          creation_flags, 0, 0,
+                                          byref(si), byref(pi))
 
         if not success:
             raise pdx("CreateProcess()", True)
