@@ -24,9 +24,9 @@
 
 import os.path
 
-from pydbg.my_ctypes import *
-from pydbg.defines   import *
-from pydbg.windows_h import *
+from .my_ctypes import *
+from .defines   import *
+from .windows_h import *
 
 # macos compatability.
 try:
@@ -36,7 +36,7 @@ except:
     kernel32 = CDLL(os.path.join(os.path.dirname(__file__), "libmacdll.dylib"))
     psapi    = kernel32
 
-from pydbg.pdx import *
+from .pdx import *
 
 import os
 

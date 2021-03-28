@@ -37,14 +37,14 @@ __all__ = \
         "windows_h",
     ]
 
-from pydbg.breakpoint import *
-from pydbg.defines import *
-from pydbg.hardware_breakpoint import *
-from pydbg.memory_breakpoint import *
-from pydbg.memory_snapshot_block import *
-from pydbg.memory_snapshot_context import *
-from pydbg.pdx import *
-from pydbg.pydbg import *
-from pydbg.pydbg_client import *
-from pydbg.system_dll import *
-from pydbg.windows_h import *
+from .breakpoint import *
+from .defines import *
+from .hardware_breakpoint import *
+from .memory_breakpoint import *
+from .memory_snapshot_block import *
+from .memory_snapshot_context import *
+from .pdx import *
+from .pydbg import *
+from .pydbg_client import *
+from .system_dll import *
+from .windows_h import *
