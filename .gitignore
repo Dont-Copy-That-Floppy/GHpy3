@@ -1,4 +1,5 @@
 *.pyc
 *.pyc
 *.exe
-my.*
+*.obj
+*.lib

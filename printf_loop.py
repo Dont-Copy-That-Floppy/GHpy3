@@ -2,10 +2,11 @@ from ctypes import *
 import time
 import os
 
-msvcrt = cdll.msvcrt
+# changed to make a private namespace reference
+msvcrt = CDLL('msvcrt')
 counter = 0
 
 while counter < 10:
-    msvcrt.printf("Loop iteration %d!\n" % counter)
+    msvcrt.printf(b"Loop iteration %d!\n" % counter)
     time.sleep(2)
     counter += 1

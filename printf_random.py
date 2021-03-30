@@ -13,7 +13,7 @@ def printf_randomizer(dbg):
     counter = dbg.read_process_memory(parameter_addr, 4)
 
     # When we use read_process_memory, it returns a packed binary string.
-    # We must first unpack it before we can use it further. PyDbg—A Pure Python Windows Debugger 59
+    # We must first unpack it before we can use it further. PyDbg-A Pure Python Windows Debugger 59
     counter = struct.unpack("L", counter)[0]
     print("Counter: %d" % int(counter))
 
