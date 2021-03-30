@@ -46,11 +46,18 @@ class debugger():
         # which is just the size of the struct itself
         startupinfo.cb = sizeof(startupinfo)
 
-        if kernel32.CreateProcessW(path_to_exe, None, None, None, None,
-                                   creation_flags, None, None,
-                                   byref(startupinfo),
-                                   byref(process_information)):
+        if(sys.version_info.major == 3):
+            success = kernel32.CreateProcessW(path_to_exe, None, None, None, None,
+                                              creation_flags, None, None,
+                                              byref(startupinfo),
+                                              byref(process_information))
+        else:
+            success = kernel32.CreateProcessA(path_to_exe, None, None, None, None,
+                                              creation_flags, None, None,
+                                              byref(startupinfo),
+                                              byref(process_information))
 
+        if(success):
             print("[*] We have successfully launched the process!")
             print("[*] The Process ID I have is: %d" %
                   process_information.dwProcessId)
