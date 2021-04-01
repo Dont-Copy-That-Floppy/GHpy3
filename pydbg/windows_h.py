@@ -8,13 +8,11 @@
 # flags 'windows.xml -s DEBUG_EVENT -s CONTEXT -s MEMORY_BASIC_INFORMATION -s LDT_ENTRY -s PROCESS_INFORMATION -s STARTUPINFO -s SYSTEM_INFO -s TOKEN_PRIVILEGES -s LUID -s HANDLE -o windows_h.py'
 
 # PEDRAM - line swap ... have to patch in our own __reduce__ definition to each ctype.
-#from ctypes import *
 from .my_ctypes import *
-import sys
+from ctypes import wintypes
 
 import sys
-x64 = sys.maxsize > 2**32
-win32 = sys.platform == 'win32'
+is_64bits = sys.maxsize > 2**32
 
 # C:/PROGRA~1/gccxml/bin/Vc6/Include/winnt.h 4188
 class _TOKEN_PRIVILEGES(Structure):
@@ -88,32 +86,23 @@ N10_LDT_ENTRY3DOLLAR_43DOLLAR_6E._fields_ = [
     ('Granularity', DWORD, 1),
     ('BaseHi', DWORD, 8),
 ]
-assert sizeof(N10_LDT_ENTRY3DOLLAR_43DOLLAR_6E) == sizeof(N10_LDT_ENTRY3DOLLAR_43DOLLAR_6E), sizeof(N10_LDT_ENTRY3DOLLAR_43DOLLAR_6E)
-if x64 and not win32:
-    assert alignment(N10_LDT_ENTRY3DOLLAR_43DOLLAR_6E) == 8, alignment(N10_LDT_ENTRY3DOLLAR_43DOLLAR_6E)
-else:
-    assert alignment(N10_LDT_ENTRY3DOLLAR_43DOLLAR_6E) == 4, alignment(N10_LDT_ENTRY3DOLLAR_43DOLLAR_6E)
+assert sizeof(N10_LDT_ENTRY3DOLLAR_43DOLLAR_6E) == 4, sizeof(N10_LDT_ENTRY3DOLLAR_43DOLLAR_6E)
+assert alignment(N10_LDT_ENTRY3DOLLAR_43DOLLAR_6E) == 4, alignment(N10_LDT_ENTRY3DOLLAR_43DOLLAR_6E)
 N10_LDT_ENTRY3DOLLAR_4E._fields_ = [
     # C:/PROGRA~1/gccxml/bin/Vc6/Include/winnt.h 1664
     ('Bytes', N10_LDT_ENTRY3DOLLAR_43DOLLAR_5E),
     ('Bits', N10_LDT_ENTRY3DOLLAR_43DOLLAR_6E),
 ]
-assert sizeof(N10_LDT_ENTRY3DOLLAR_4E) == sizeof(N10_LDT_ENTRY3DOLLAR_4E), sizeof(N10_LDT_ENTRY3DOLLAR_4E)
-if x64 and not win32:
-    assert alignment(N10_LDT_ENTRY3DOLLAR_4E) == 8, alignment(N10_LDT_ENTRY3DOLLAR_4E)
-else:
-    assert alignment(N10_LDT_ENTRY3DOLLAR_4E) == 4, alignment(N10_LDT_ENTRY3DOLLAR_4E)
+assert sizeof(N10_LDT_ENTRY3DOLLAR_4E) == 4, sizeof(N10_LDT_ENTRY3DOLLAR_4E)
+assert alignment(N10_LDT_ENTRY3DOLLAR_4E) == 4, alignment(N10_LDT_ENTRY3DOLLAR_4E)
 _LDT_ENTRY._fields_ = [
     # C:/PROGRA~1/gccxml/bin/Vc6/Include/winnt.h 1661
     ('LimitLow', WORD),
     ('BaseLow', WORD),
     ('HighWord', N10_LDT_ENTRY3DOLLAR_4E),
 ]
-assert sizeof(_LDT_ENTRY) == sizeof(_LDT_ENTRY), sizeof(_LDT_ENTRY)
-if x64 and not win32:
-    assert alignment(_LDT_ENTRY) == 8, alignment(_LDT_ENTRY)
-else:
-    assert alignment(_LDT_ENTRY) == 4, alignment(_LDT_ENTRY)
+assert sizeof(_LDT_ENTRY) == 8, sizeof(_LDT_ENTRY)
+assert alignment(_LDT_ENTRY) == 4, alignment(_LDT_ENTRY)
 PVOID = c_void_p
 UINT_PTR = c_ulong
 SIZE_T = UINT_PTR
@@ -127,8 +116,13 @@ _MEMORY_BASIC_INFORMATION._fields_ = [
     ('Protect', DWORD),
     ('Type', DWORD),
 ]
-#assert sizeof(_MEMORY_BASIC_INFORMATION) == 28, sizeof(_MEMORY_BASIC_INFORMATION)
-#assert alignment(_MEMORY_BASIC_INFORMATION) == 4, alignment(_MEMORY_BASIC_INFORMATION)
+if is_64bits:
+    assert sizeof(_MEMORY_BASIC_INFORMATION) == 40, sizeof(_MEMORY_BASIC_INFORMATION)
+    assert alignment(_MEMORY_BASIC_INFORMATION) == 8, alignment(_MEMORY_BASIC_INFORMATION)
+else:
+    assert sizeof(_MEMORY_BASIC_INFORMATION) == 28, sizeof(_MEMORY_BASIC_INFORMATION)
+    assert alignment(_MEMORY_BASIC_INFORMATION) == 4, alignment(_MEMORY_BASIC_INFORMATION)
+
 # C:/PROGRA~1/gccxml/bin/Vc6/Include/winnt.h 1539
 class _FLOATING_SAVE_AREA(Structure):
     pass
@@ -144,11 +138,8 @@ _FLOATING_SAVE_AREA._fields_ = [
     ('RegisterArea', BYTE * 80),
     ('Cr0NpxState', DWORD),
 ]
-assert sizeof(_FLOATING_SAVE_AREA) == sizeof(_FLOATING_SAVE_AREA), sizeof(_FLOATING_SAVE_AREA)
-if x64 and not win32:
-    assert alignment(_FLOATING_SAVE_AREA) == 8, alignment(_FLOATING_SAVE_AREA)
-else:
-    assert alignment(_FLOATING_SAVE_AREA) == 4, alignment(_FLOATING_SAVE_AREA)
+assert sizeof(_FLOATING_SAVE_AREA) == 112, sizeof(_FLOATING_SAVE_AREA)
+assert alignment(_FLOATING_SAVE_AREA) == 4, alignment(_FLOATING_SAVE_AREA)
 FLOATING_SAVE_AREA = _FLOATING_SAVE_AREA
 _CONTEXT._fields_ = [
     # C:/PROGRA~1/gccxml/bin/Vc6/Include/winnt.h 1563
@@ -178,11 +169,168 @@ _CONTEXT._fields_ = [
     ('SegSs', DWORD),
     ('ExtendedRegisters', BYTE * 512),
 ]
-assert sizeof(_CONTEXT) == sizeof(_CONTEXT), sizeof(_CONTEXT)
-if x64 and not win32:
-    assert alignment(_CONTEXT) == 8, alignment(_CONTEXT)
+assert sizeof(_CONTEXT) == 716, sizeof(_CONTEXT)
+assert alignment(_CONTEXT) == 4, alignment(_CONTEXT)
+
+DWORD64 = c_ulonglong
+
+
+# Define 128-bit 16-byte aligned xmm register type.
+class M128A(Structure):
+    _pack_ = 16
+    _fields_ = [
+        ("Low", DWORD64),
+        ("High", DWORD64),
+        ]
+
+class DUMMYSTRUCTNAME(Structure):
+    _fields_ = [
+        ("Header", M128A * 2),
+        ("Legacy", M128A * 8),
+        ("Xmm0", M128A),
+        ("Xmm1", M128A),
+        ("Xmm2", M128A),
+        ("Xmm3", M128A),
+        ("Xmm4", M128A),
+        ("Xmm5", M128A),
+        ("Xmm6", M128A),
+        ("Xmm7", M128A),
+        ("Xmm8", M128A),
+        ("Xmm9", M128A),
+        ("Xmm10", M128A),
+        ("Xmm11", M128A),
+        ("Xmm12", M128A),
+        ("Xmm13", M128A),
+        ("Xmm14", M128A),
+        ("Xmm15", M128A),
+    ]
+
+class _XSAVE_FORMAT32(Structure):
+    # align 16
+    _fields_ = [
+        ("ControlWord", WORD),
+        ("StatusWord",WORD),
+        ("TagWord",BYTE),
+        ("Reserved1",BYTE),
+        ("ErrorOpcode",WORD),
+        ("ErrorOffset",DWORD),
+        ("ErrorSelector",WORD),
+        ("Reserved2",WORD),
+        ("DataOffset",DWORD),
+        ("DataSelector",WORD),
+        ("Reserved3",WORD),
+        ("MxCsr",DWORD),
+        ("MxCsr_Mask",DWORD),
+        ("FloatRegisters",M128A*8),
+
+        ("XmmRegisters",M128A*8),
+        ("Reserved4",BYTE*192),
+        ("StackControl", DWORD*7),   # KERNEL_STACK_CONTROL structure actualy
+        ("Cr0NpxState",DWORD),
+        ]
+
+class _XSAVE_FORMAT64(Structure):
+    # align 16
+    _fields_ = [
+        ("ControlWord", WORD),
+        ("StatusWord",WORD),
+        ("TagWord",BYTE),
+        ("Reserved1",BYTE),
+        ("ErrorOpcode",WORD),
+        ("ErrorOffset",DWORD),
+        ("ErrorSelector",WORD),
+        ("Reserved2",WORD),
+        ("DataOffset",DWORD),
+        ("DataSelector",WORD),
+        ("Reserved3",WORD),
+        ("MxCsr",DWORD),
+        ("MxCsr_Mask",DWORD),
+        ("FloatRegisters",M128A*8),
+
+        ("XmmRegisters",M128A*16),
+        ("Reserved4",BYTE*96),
+        ]
+
+if is_64bits:
+    XSAVE_FORMAT = _XSAVE_FORMAT64
 else:
-    assert alignment(_CONTEXT) == 4, alignment(_CONTEXT)
+    XSAVE_FORMAT = _XSAVE_FORMAT32
+XMM_SAVE_AREA32 = XSAVE_FORMAT
+
+class DUMMYUNIONNAME(Union):
+    _fields_ = [
+        ("FltSave", XMM_SAVE_AREA32),
+        ("DummyStructName", DUMMYSTRUCTNAME)
+    ]
+
+class _CONTEXT64(Structure):
+    _pack_ = 16
+    _fields_ = [
+        ("P1Home", DWORD64),
+        ("P2Home", DWORD64),
+        ("P3Home", DWORD64),
+        ("P4Home", DWORD64),
+        ("P5Home", DWORD64),
+        ("P6Home", DWORD64),
+
+        ("ContextFlags", DWORD),
+        ("MxCsr", DWORD),
+
+        ("SegCs", WORD),
+        ("SegDs", WORD),
+        ("SegEs", WORD),
+        ("SegFs", WORD),
+        ("SegGs", WORD),
+        ("SegSs", WORD),
+        ("EFlags", DWORD),
+
+        ("Dr0", DWORD64),
+        ("Dr1", DWORD64),
+        ("Dr2", DWORD64),
+        ("Dr3", DWORD64),
+        ("Dr6", DWORD64),
+        ("Dr7", DWORD64),
+
+        ("Rax", DWORD64),
+        ("Rcx", DWORD64),
+        ("Rdx", DWORD64),
+        ("Rbx", DWORD64),
+        ("Rsp", DWORD64),
+        ("Rbp", DWORD64),
+        ("Rsi", DWORD64),
+        ("Rdi", DWORD64),
+        ("R8", DWORD64),
+        ("R9", DWORD64),
+        ("R10", DWORD64),
+        ("R11", DWORD64),
+        ("R12", DWORD64),
+        ("R13", DWORD64),
+        ("R14", DWORD64),
+        ("R15", DWORD64),
+        ("Rip", DWORD64),
+
+        ("DebugControl", DWORD64),
+        ("LastBranchToRip", DWORD64),
+        ("LastBranchFromRip", DWORD64),
+        ("LastExceptionToRip", DWORD64),
+        ("LastExceptionFromRip", DWORD64),
+
+        ("DUMMYUNIONNAME", DUMMYUNIONNAME),
+
+        ("VectorRegister", M128A * 26),
+        ("VectorControl", DWORD64),
+
+        ("DebugControl", DWORD),
+        ("LastBranchToRip", DWORD),
+        ("LastBranchFromRip", DWORD),
+        ("LastExceptionToRip", DWORD),
+        ("LastExceptionFromRip", DWORD)
+]
+####### TODO: BROKEN
+###############assert alignment(_CONTEXT64) == 16, alignment(_CONTEXT64)
+assert sizeof(_CONTEXT64) == 1256, sizeof(_CONTEXT64)
+CONTEXT64 = _CONTEXT64
+
 # C:/PROGRA~1/MICROS~2/VC98/Include/winbase.h 498
 class N12_SYSTEM_INFO4DOLLAR_37E(Union):
     pass
@@ -202,11 +350,8 @@ N12_SYSTEM_INFO4DOLLAR_37E._fields_ = [
     # Unnamed field renamed to '_'
     ('_', N12_SYSTEM_INFO4DOLLAR_374DOLLAR_38E),
 ]
-assert sizeof(N12_SYSTEM_INFO4DOLLAR_37E) == sizeof(N12_SYSTEM_INFO4DOLLAR_37E), sizeof(N12_SYSTEM_INFO4DOLLAR_37E)
-if x64 and not win32:
-    assert alignment(N12_SYSTEM_INFO4DOLLAR_37E) == 8, alignment(N12_SYSTEM_INFO4DOLLAR_37E)
-else:
-    assert alignment(N12_SYSTEM_INFO4DOLLAR_37E) == 4, alignment(N12_SYSTEM_INFO4DOLLAR_37E)
+assert sizeof(N12_SYSTEM_INFO4DOLLAR_37E) == 4, sizeof(N12_SYSTEM_INFO4DOLLAR_37E)
+assert alignment(N12_SYSTEM_INFO4DOLLAR_37E) == 4, alignment(N12_SYSTEM_INFO4DOLLAR_37E)
 LPVOID = c_void_p
 _SYSTEM_INFO._fields_ = [
     # C:/PROGRA~1/MICROS~2/VC98/Include/winbase.h 497
@@ -222,8 +367,12 @@ _SYSTEM_INFO._fields_ = [
     ('wProcessorLevel', WORD),
     ('wProcessorRevision', WORD),
 ]
-#assert sizeof(_SYSTEM_INFO) == 36, sizeof(_SYSTEM_INFO)
-#assert alignment(_SYSTEM_INFO) == 4, alignment(_SYSTEM_INFO)
+if is_64bits:
+    assert sizeof(_SYSTEM_INFO) == 48, sizeof(_SYSTEM_INFO)
+    assert alignment(_SYSTEM_INFO) == 8, alignment(_SYSTEM_INFO)
+else:
+    assert sizeof(_SYSTEM_INFO) == 36, sizeof(_SYSTEM_INFO)
+    assert alignment(_SYSTEM_INFO) == 4, alignment(_SYSTEM_INFO)
 CHAR = c_char
 LPSTR = POINTER(CHAR)
 LPBYTE = POINTER(BYTE)
@@ -248,8 +397,13 @@ _STARTUPINFOA._fields_ = [
     ('hStdOutput', HANDLE),
     ('hStdError', HANDLE),
 ]
-#assert sizeof(_STARTUPINFOA) == 68, sizeof(_STARTUPINFOA)
-#assert alignment(_STARTUPINFOA) == 4, alignment(_STARTUPINFOA)
+if is_64bits:
+    assert sizeof(_STARTUPINFOA) == 104, sizeof(_STARTUPINFOA)
+    assert alignment(_STARTUPINFOA) == 8, alignment(_STARTUPINFOA)
+else:
+    assert sizeof(_STARTUPINFOA) == 68, sizeof(_STARTUPINFOA)
+    assert alignment(_STARTUPINFOA) == 4, alignment(_STARTUPINFOA)
+
 # C:/PROGRA~1/MICROS~2/VC98/Include/winbase.h 701
 class N12_DEBUG_EVENT4DOLLAR_39E(Union):
     pass
@@ -257,32 +411,51 @@ class N12_DEBUG_EVENT4DOLLAR_39E(Union):
 class _EXCEPTION_DEBUG_INFO(Structure):
     pass
 # C:/PROGRA~1/gccxml/bin/Vc6/Include/winnt.h 3101
-class _EXCEPTION_RECORD(Structure):
+class _EXCEPTION_RECORD32(Structure):
     pass
-_EXCEPTION_RECORD._fields_ = [
+_EXCEPTION_RECORD32._fields_ = [
     # C:/PROGRA~1/gccxml/bin/Vc6/Include/winnt.h 3101
     ('ExceptionCode', DWORD),
     ('ExceptionFlags', DWORD),
-    ('ExceptionRecord', POINTER(_EXCEPTION_RECORD)),
+    ('ExceptionRecord', POINTER(_EXCEPTION_RECORD32)),
     ('ExceptionAddress', PVOID),
     ('NumberParameters', DWORD),
     ('ExceptionInformation', UINT_PTR * 15),
 ]
-assert sizeof(_EXCEPTION_RECORD) == sizeof(_EXCEPTION_RECORD), sizeof(_EXCEPTION_RECORD)
-if x64:
-    assert alignment(_EXCEPTION_RECORD) == 8, alignment(_EXCEPTION_RECORD)
+class _EXCEPTION_RECORD64(Structure):
+    pass
+_EXCEPTION_RECORD64._fields_ = [
+    # C:/PROGRA~1/gccxml/bin/Vc6/Include/winnt.h 3101
+    ('ExceptionCode', DWORD),
+    ('ExceptionFlags', DWORD),
+    ('ExceptionRecord', POINTER(_EXCEPTION_RECORD64)), # == DWORD64
+    ('ExceptionAddress', PVOID), # == DWORD64
+    ('NumberParameters', DWORD),
+    ( 'UnusedAlignment', DWORD),
+    ('ExceptionInformation', DWORD64 * 15),
+]
+
+# https://docs.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-exception_record
+if is_64bits:
+    EXCEPTION_RECORD = _EXCEPTION_RECORD64
+    assert sizeof(_EXCEPTION_RECORD64) == 152, sizeof(_EXCEPTION_RECORD64)
+    assert alignment(_EXCEPTION_RECORD64) == 8, alignment(_EXCEPTION_RECORD64)
 else:
-    assert alignment(_EXCEPTION_RECORD) == 4, alignment(_EXCEPTION_RECORD)
-EXCEPTION_RECORD = _EXCEPTION_RECORD
+    EXCEPTION_RECORD = _EXCEPTION_RECORD32
+    assert sizeof(_EXCEPTION_RECORD32) == 80, sizeof(_EXCEPTION_RECORD32)
+    assert alignment(_EXCEPTION_RECORD32) == 4, alignment(_EXCEPTION_RECORD32)
+
+
 _EXCEPTION_DEBUG_INFO._fields_ = [
     # C:/PROGRA~1/MICROS~2/VC98/Include/winbase.h 640
     ('ExceptionRecord', EXCEPTION_RECORD),
     ('dwFirstChance', DWORD),
 ]
-assert sizeof(_EXCEPTION_DEBUG_INFO) == sizeof(_EXCEPTION_DEBUG_INFO), sizeof(_EXCEPTION_DEBUG_INFO)
-if x64:
+if is_64bits:
+    assert sizeof(_EXCEPTION_DEBUG_INFO) == 160, sizeof(_EXCEPTION_DEBUG_INFO)
     assert alignment(_EXCEPTION_DEBUG_INFO) == 8, alignment(_EXCEPTION_DEBUG_INFO)
 else:
+    assert sizeof(_EXCEPTION_DEBUG_INFO) == 84, sizeof(_EXCEPTION_DEBUG_INFO)
     assert alignment(_EXCEPTION_DEBUG_INFO) == 4, alignment(_EXCEPTION_DEBUG_INFO)
 EXCEPTION_DEBUG_INFO = _EXCEPTION_DEBUG_INFO
 # C:/PROGRA~1/MICROS~2/VC98/Include/winbase.h 645
@@ -302,10 +475,11 @@ _CREATE_THREAD_DEBUG_INFO._fields_ = [
     ('lpThreadLocalBase', LPVOID),
     ('lpStartAddress', LPTHREAD_START_ROUTINE),
 ]
-assert sizeof(_CREATE_THREAD_DEBUG_INFO) == sizeof(_CREATE_THREAD_DEBUG_INFO), sizeof(_CREATE_THREAD_DEBUG_INFO)
-if x64 or sys.platform == 'win32':    
+if is_64bits:
+    assert sizeof(_CREATE_THREAD_DEBUG_INFO) == 24, sizeof(_CREATE_THREAD_DEBUG_INFO)
     assert alignment(_CREATE_THREAD_DEBUG_INFO) == 8, alignment(_CREATE_THREAD_DEBUG_INFO)
 else:
+    assert sizeof(_CREATE_THREAD_DEBUG_INFO) == 12, sizeof(_CREATE_THREAD_DEBUG_INFO)
     assert alignment(_CREATE_THREAD_DEBUG_INFO) == 4, alignment(_CREATE_THREAD_DEBUG_INFO)
 CREATE_THREAD_DEBUG_INFO = _CREATE_THREAD_DEBUG_INFO
 # C:/PROGRA~1/MICROS~2/VC98/Include/winbase.h 651
@@ -324,10 +498,11 @@ _CREATE_PROCESS_DEBUG_INFO._fields_ = [
     ('lpImageName', LPVOID),
     ('fUnicode', WORD),
 ]
-assert sizeof(_CREATE_PROCESS_DEBUG_INFO) == sizeof(_CREATE_PROCESS_DEBUG_INFO), sizeof(_CREATE_PROCESS_DEBUG_INFO)
-if x64:
+if is_64bits:
+    assert sizeof(_CREATE_PROCESS_DEBUG_INFO) == 72, sizeof(_CREATE_PROCESS_DEBUG_INFO)
     assert alignment(_CREATE_PROCESS_DEBUG_INFO) == 8, alignment(_CREATE_PROCESS_DEBUG_INFO)
 else:
+    assert sizeof(_CREATE_PROCESS_DEBUG_INFO) == 40, sizeof(_CREATE_PROCESS_DEBUG_INFO)
     assert alignment(_CREATE_PROCESS_DEBUG_INFO) == 4, alignment(_CREATE_PROCESS_DEBUG_INFO)
 CREATE_PROCESS_DEBUG_INFO = _CREATE_PROCESS_DEBUG_INFO
 # C:/PROGRA~1/MICROS~2/VC98/Include/winbase.h 664
@@ -337,11 +512,8 @@ _EXIT_THREAD_DEBUG_INFO._fields_ = [
     # C:/PROGRA~1/MICROS~2/VC98/Include/winbase.h 664
     ('dwExitCode', DWORD),
 ]
-assert sizeof(_EXIT_THREAD_DEBUG_INFO) == sizeof(_EXIT_THREAD_DEBUG_INFO), sizeof(_EXIT_THREAD_DEBUG_INFO)
-if x64 and not win32:
-    assert alignment(_EXIT_THREAD_DEBUG_INFO) == 8, alignment(_EXIT_THREAD_DEBUG_INFO)
-else:
-    assert alignment(_EXIT_THREAD_DEBUG_INFO) == 4, alignment(_EXIT_THREAD_DEBUG_INFO)
+assert sizeof(_EXIT_THREAD_DEBUG_INFO) == 4, sizeof(_EXIT_THREAD_DEBUG_INFO)
+assert alignment(_EXIT_THREAD_DEBUG_INFO) == 4, alignment(_EXIT_THREAD_DEBUG_INFO)
 EXIT_THREAD_DEBUG_INFO = _EXIT_THREAD_DEBUG_INFO
 # C:/PROGRA~1/MICROS~2/VC98/Include/winbase.h 668
 class _EXIT_PROCESS_DEBUG_INFO(Structure):
@@ -350,11 +522,8 @@ _EXIT_PROCESS_DEBUG_INFO._fields_ = [
     # C:/PROGRA~1/MICROS~2/VC98/Include/winbase.h 668
     ('dwExitCode', DWORD),
 ]
-assert sizeof(_EXIT_PROCESS_DEBUG_INFO) == sizeof(_EXIT_PROCESS_DEBUG_INFO), sizeof(_EXIT_PROCESS_DEBUG_INFO)
-if x64 and not win32:
-    assert alignment(_EXIT_PROCESS_DEBUG_INFO) == 8, alignment(_EXIT_PROCESS_DEBUG_INFO)
-else:
-    assert alignment(_EXIT_PROCESS_DEBUG_INFO) == 4, alignment(_EXIT_PROCESS_DEBUG_INFO)
+assert sizeof(_EXIT_PROCESS_DEBUG_INFO) == 4, sizeof(_EXIT_PROCESS_DEBUG_INFO)
+assert alignment(_EXIT_PROCESS_DEBUG_INFO) == 4, alignment(_EXIT_PROCESS_DEBUG_INFO)
 EXIT_PROCESS_DEBUG_INFO = _EXIT_PROCESS_DEBUG_INFO
 # C:/PROGRA~1/MICROS~2/VC98/Include/winbase.h 672
 class _LOAD_DLL_DEBUG_INFO(Structure):
@@ -368,10 +537,11 @@ _LOAD_DLL_DEBUG_INFO._fields_ = [
     ('lpImageName', LPVOID),
     ('fUnicode', WORD),
 ]
-assert sizeof(_LOAD_DLL_DEBUG_INFO) == sizeof(_LOAD_DLL_DEBUG_INFO), sizeof(_LOAD_DLL_DEBUG_INFO)
-if x64:
+if is_64bits:
+    assert sizeof(_LOAD_DLL_DEBUG_INFO) == 40, sizeof(_LOAD_DLL_DEBUG_INFO)
     assert alignment(_LOAD_DLL_DEBUG_INFO) == 8, alignment(_LOAD_DLL_DEBUG_INFO)
 else:
+    assert sizeof(_LOAD_DLL_DEBUG_INFO) == 24, sizeof(_LOAD_DLL_DEBUG_INFO)
     assert alignment(_LOAD_DLL_DEBUG_INFO) == 4, alignment(_LOAD_DLL_DEBUG_INFO)
 LOAD_DLL_DEBUG_INFO = _LOAD_DLL_DEBUG_INFO
 # C:/PROGRA~1/MICROS~2/VC98/Include/winbase.h 681
@@ -381,7 +551,7 @@ _UNLOAD_DLL_DEBUG_INFO._fields_ = [
     # C:/PROGRA~1/MICROS~2/VC98/Include/winbase.h 681
     ('lpBaseOfDll', LPVOID),
 ]
-if x64:
+if is_64bits:
     assert sizeof(_UNLOAD_DLL_DEBUG_INFO) == 8, sizeof(_UNLOAD_DLL_DEBUG_INFO)
     assert alignment(_UNLOAD_DLL_DEBUG_INFO) == 8, alignment(_UNLOAD_DLL_DEBUG_INFO)
 else:
@@ -397,7 +567,7 @@ _OUTPUT_DEBUG_STRING_INFO._fields_ = [
     ('fUnicode', WORD),
     ('nDebugStringLength', WORD),
 ]
-if x64:
+if is_64bits:
     assert sizeof(_OUTPUT_DEBUG_STRING_INFO) == 16, sizeof(_OUTPUT_DEBUG_STRING_INFO)
     assert alignment(_OUTPUT_DEBUG_STRING_INFO) == 8, alignment(_OUTPUT_DEBUG_STRING_INFO)
 else:
@@ -412,11 +582,8 @@ _RIP_INFO._fields_ = [
     ('dwError', DWORD),
     ('dwType', DWORD),
 ]
-assert sizeof(_RIP_INFO) == sizeof(_RIP_INFO), sizeof(_RIP_INFO)
-if x64 and not win32:
-    assert alignment(_RIP_INFO) == 8, alignment(_RIP_INFO)
-else:
-    assert alignment(_RIP_INFO) == 4, alignment(_RIP_INFO)
+assert sizeof(_RIP_INFO) == 8, sizeof(_RIP_INFO)
+assert alignment(_RIP_INFO) == 4, alignment(_RIP_INFO)
 RIP_INFO = _RIP_INFO
 N12_DEBUG_EVENT4DOLLAR_39E._fields_ = [
     # C:/PROGRA~1/MICROS~2/VC98/Include/winbase.h 701
@@ -430,10 +597,11 @@ N12_DEBUG_EVENT4DOLLAR_39E._fields_ = [
     ('DebugString', OUTPUT_DEBUG_STRING_INFO),
     ('RipInfo', RIP_INFO),
 ]
-assert sizeof(N12_DEBUG_EVENT4DOLLAR_39E) == sizeof(N12_DEBUG_EVENT4DOLLAR_39E), sizeof(N12_DEBUG_EVENT4DOLLAR_39E)
-if x64:
+if is_64bits:
+    assert sizeof(N12_DEBUG_EVENT4DOLLAR_39E) == 160, sizeof(N12_DEBUG_EVENT4DOLLAR_39E)
     assert alignment(N12_DEBUG_EVENT4DOLLAR_39E) == 8, alignment(N12_DEBUG_EVENT4DOLLAR_39E)
 else:
+    assert sizeof(N12_DEBUG_EVENT4DOLLAR_39E) == 84, sizeof(N12_DEBUG_EVENT4DOLLAR_39E)
     assert alignment(N12_DEBUG_EVENT4DOLLAR_39E) == 4, alignment(N12_DEBUG_EVENT4DOLLAR_39E)
 _DEBUG_EVENT._fields_ = [
     # C:/PROGRA~1/MICROS~2/VC98/Include/winbase.h 697
@@ -442,10 +610,11 @@ _DEBUG_EVENT._fields_ = [
     ('dwThreadId', DWORD),
     ('u', N12_DEBUG_EVENT4DOLLAR_39E),
 ]
-assert sizeof(_DEBUG_EVENT) == sizeof(_DEBUG_EVENT), sizeof(_DEBUG_EVENT)
-if x64:
+if is_64bits:
+    assert sizeof(_DEBUG_EVENT) == 176, sizeof(_DEBUG_EVENT)
     assert alignment(_DEBUG_EVENT) == 8, alignment(_DEBUG_EVENT)
 else:
+    assert sizeof(_DEBUG_EVENT) == 96, sizeof(_DEBUG_EVENT)
     assert alignment(_DEBUG_EVENT) == 4, alignment(_DEBUG_EVENT)
 LONG = c_long
 _LUID._fields_ = [
@@ -453,11 +622,8 @@ _LUID._fields_ = [
     ('LowPart', DWORD),
     ('HighPart', LONG),
 ]
-assert sizeof(_LUID) == sizeof(_LUID), sizeof(_LUID)
-if x64 and not win32:
-    assert alignment(_LUID) == 8, alignment(_LUID)
-else:
-    assert alignment(_LUID) == 4, alignment(_LUID)
+assert sizeof(_LUID) == 8, sizeof(_LUID)
+assert alignment(_LUID) == 4, alignment(_LUID)
 # C:/PROGRA~1/gccxml/bin/Vc6/Include/winnt.h 3241
 class _LUID_AND_ATTRIBUTES(Structure):
     pass
@@ -466,22 +632,16 @@ _LUID_AND_ATTRIBUTES._fields_ = [
     ('Luid', LUID),
     ('Attributes', DWORD),
 ]
-assert sizeof(_LUID_AND_ATTRIBUTES) == sizeof(_LUID_AND_ATTRIBUTES), sizeof(_LUID_AND_ATTRIBUTES)
-if x64 and not win32:
-    assert alignment(_LUID_AND_ATTRIBUTES) == 8, alignment(_LUID_AND_ATTRIBUTES)
-else:
-    assert alignment(_LUID_AND_ATTRIBUTES) == 4, alignment(_LUID_AND_ATTRIBUTES)
+assert sizeof(_LUID_AND_ATTRIBUTES) == 12, sizeof(_LUID_AND_ATTRIBUTES)
+assert alignment(_LUID_AND_ATTRIBUTES) == 4, alignment(_LUID_AND_ATTRIBUTES)
 LUID_AND_ATTRIBUTES = _LUID_AND_ATTRIBUTES
 _TOKEN_PRIVILEGES._fields_ = [
     # C:/PROGRA~1/gccxml/bin/Vc6/Include/winnt.h 4188
     ('PrivilegeCount', DWORD),
     ('Privileges', LUID_AND_ATTRIBUTES * 1),
 ]
-assert sizeof(_TOKEN_PRIVILEGES) == sizeof(_TOKEN_PRIVILEGES), sizeof(_TOKEN_PRIVILEGES)
-if x64 and not win32:
-    assert alignment(_TOKEN_PRIVILEGES) == 8, alignment(_TOKEN_PRIVILEGES)
-else:
-    assert alignment(_TOKEN_PRIVILEGES) == 4, alignment(_TOKEN_PRIVILEGES)
+assert sizeof(_TOKEN_PRIVILEGES) == 16, sizeof(_TOKEN_PRIVILEGES)
+assert alignment(_TOKEN_PRIVILEGES) == 4, alignment(_TOKEN_PRIVILEGES)
 _PROCESS_INFORMATION._fields_ = [
     # C:/PROGRA~1/MICROS~2/VC98/Include/winbase.h 229
     ('hProcess', HANDLE),
@@ -489,8 +649,106 @@ _PROCESS_INFORMATION._fields_ = [
     ('dwProcessId', DWORD),
     ('dwThreadId', DWORD),
 ]
-assert sizeof(_PROCESS_INFORMATION) == sizeof(_PROCESS_INFORMATION), sizeof(_PROCESS_INFORMATION)
-if x64:
+if is_64bits:
+    assert sizeof(_PROCESS_INFORMATION) == 24, sizeof(_PROCESS_INFORMATION)
     assert alignment(_PROCESS_INFORMATION) == 8, alignment(_PROCESS_INFORMATION)
 else:
+    assert sizeof(_PROCESS_INFORMATION) == 16, sizeof(_PROCESS_INFORMATION)
     assert alignment(_PROCESS_INFORMATION) == 4, alignment(_PROCESS_INFORMATION)
+
+class _IMAGE_FILE_HEADER(Structure):
+    _fields_ = [
+        ("Machine", WORD),
+        ("NumberOfSections", WORD),
+        ("TimeDateStamp", DWORD),
+        ("PointerToSymbolTable", DWORD),
+        ("NumberOfSymbols", DWORD),
+        ("SizeOfOptionalHeader", WORD),
+        ("Characteristics", WORD),
+    ]
+
+class _IMAGE_DATA_DIRECTORY(Structure):
+    _fields_ = [
+        ("VirtualAddress", DWORD),
+        ("Size", DWORD),
+    ]
+
+class _IMAGE_DATA_DIRECTORY(Structure):
+    _fields_ = [
+        ("VirtualAddress", DWORD),
+        ("Size", DWORD),
+    ]
+
+IMAGE_NUMBEROF_DIRECTORY_ENTRIES = 16
+
+class _IMAGE_OPTIONAL_HEADER(Structure):
+    _fields_ = [
+        ("Magic", WORD),
+        ("MajorLinkerVersion", BYTE),
+        ("MinorLinkerVersion", BYTE),
+        ("SizeOfCode", DWORD),
+        ("SizeOfInitializedData", DWORD),
+        ("SizeOfUninitializedData", DWORD),
+        ("AddressOfEntryPoint", DWORD),
+        ("BaseOfCode", DWORD),
+        ("BaseOfData", DWORD),
+        ("ImageBase", DWORD),
+        ("SectionAlignment", DWORD),
+        ("FileAlignment", DWORD),
+        ("MajorOperatingSystemVersion", WORD),
+        ("MinorOperatingSystemVersion", WORD),
+        ("MajorImageVersion", WORD),
+        ("MinorImageVersion", WORD),
+        ("MajorSubsystemVersion", WORD),
+        ("MinorSubsystemVersion", WORD),
+        ("Win32VersionValue", DWORD),
+        ("SizeOfImage", DWORD),
+        ("SizeOfHeaders", DWORD),
+        ("CheckSum", DWORD),
+        ("Subsystem", WORD),
+        ("DllCharacteristics", WORD),
+        ("SizeOfStackReserve", DWORD),
+        ("SizeOfStackCommit", DWORD),
+        ("SizeOfHeapReserve", DWORD),
+        ("SizeOfHeapCommit", DWORD),
+        ("LoaderFlags", DWORD),
+        ("NumberOfRvaAndSizes", DWORD),
+        ("DataDirectory", _IMAGE_DATA_DIRECTORY * IMAGE_NUMBEROF_DIRECTORY_ENTRIES),
+    ]
+IMAGE_OPTIONAL_HEADER32 = _IMAGE_OPTIONAL_HEADER
+
+class _IMAGE_OPTIONAL_HEADER64(Structure):
+    _fields_ = [
+        ("Magic", WORD),
+        ("MajorLinkerVersion", BYTE),
+        ("MinorLinkerVersion", BYTE),
+        ("SizeOfCode", DWORD),
+        ("SizeOfInitializedData", DWORD),
+        ("SizeOfUninitializedData", DWORD),
+        ("AddressOfEntryPoint", DWORD),
+        ("BaseOfCode", DWORD),
+        ("ImageBase", DWORD64),
+        ("SectionAlignment", DWORD),
+        ("FileAlignment", DWORD),
+        ("MajorOperatingSystemVersion", WORD),
+        ("MinorOperatingSystemVersion", WORD),
+        ("MajorImageVersion", WORD),
+        ("MinorImageVersion", WORD),
+        ("MajorSubsystemVersion", WORD),
+        ("MinorSubsystemVersion", WORD),
+        ("Win32VersionValue", DWORD),
+        ("SizeOfImage", DWORD),
+        ("SizeOfHeaders", DWORD),
+        ("CheckSum", DWORD),
+        ("Subsystem", WORD),
+        ("DllCharacteristics", WORD),
+        ("SizeOfStackReserve", DWORD64),
+        ("SizeOfStackCommit", DWORD64),
+        ("SizeOfHeapReserve", DWORD64),
+        ("SizeOfHeapCommit", DWORD64),
+        ("LoaderFlags", DWORD),
+        ("NumberOfRvaAndSizes", DWORD),
+        ("DataDirectory", _IMAGE_DATA_DIRECTORY * IMAGE_NUMBEROF_DIRECTORY_ENTRIES),
+    ]
+IMAGE_OPTIONAL_HEADER64 = _IMAGE_OPTIONAL_HEADER64
+

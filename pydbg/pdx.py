@@ -24,7 +24,6 @@
 
 import os.path
 
-from .my_ctypes import *
 from .defines   import *
 
 # macos compatability.
