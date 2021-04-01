@@ -1,9 +1,7 @@
 from pydbg import *
 from pydbg.defines import *
-
 import struct
 import random
-
 # This is our user defined callback function
 
 
@@ -33,10 +31,11 @@ def run(pid=None):
     if(pid == None):
         pid = input("Enter the printf_loop.py PID: ")
     # Attach the debugger to that process
-    dbg.attach(int(pid))
+    dbg = dbg.attach(int(pid))
     # Set the breakpoint with the printf_randomizer function defined as a callback
-    printf_address = dbg.func_resolve("msvcrt", "printf")
-    dbg.bp_set(printf_address, description="printf_address",
-            handler=printf_randomizer)
+    printf_address = dbg.func_resolve("msvcrt", "printf_s")
+    #dbg.bp_set(printf_address, description="printf_address", handler=printf_randomizer)
     # Resume the process
     dbg.run()
+
+run(19264)

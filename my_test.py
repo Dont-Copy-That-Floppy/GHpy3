@@ -3,17 +3,22 @@ from my_debugger_defines import *
 from multiprocessing import Pool, Process
 import sys
 import printf_random
+from pydbg import *
+from pydbg.defines import *
 
-debugger = my_debugger.debugger()
-pid = 0
 
-
-def static_load():
+def static_load(debugger_type=None):
     print("Loading static PID debugger using calc.exe...")
+    if(debugger_type == 'pydbg'):
+        debugger = pydbg()
+    else:
+        debugger = my_debugger.debugger()
+
     if(sys.maxsize > 2**32):
         debugger.load("C:\Windows\SysWOW64\calc.exe")
     else:
         debugger.load("C:\Windows\System32\calc.exe")
+
     debugger.run()
     debugger.detach()
 
@@ -22,10 +27,17 @@ def printf_infinite():
     import printf_loop
 
 
-def dyn_load(pid=None):
+def dyn_load(debugger_type=None, pid=None, function_name=None):
     print("Loading dynamic PID debugger...")
+    if(debugger_type == 'pydbg'):
+        debugger = pydbg()
+    else:
+        debugger = my_debugger.debugger()
     debugger.attach(int(pid))
-    printf_address = debugger.func_resolve("msvcrt.dll", "printf")
+    if(function_name == None):
+        printf_address = debugger.func_resolve("msvcrt.dll", "printf")
+    else:
+        printf_address = debugger.func_resolve("msvcrt.dll", function_name)
     print("[*] Address of printf: 0x%08x" % printf_address)
     # soft breakpoint
     # debugger.bp_set(printf_address)

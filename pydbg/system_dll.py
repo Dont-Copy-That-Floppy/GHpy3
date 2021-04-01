@@ -22,10 +22,10 @@
 @organization: www.openrce.org
 '''
 
+from __future__ import print_function
+
 import os.path
 
-from .my_ctypes import *
-from .defines   import *
 from .windows_h import *
 
 # macos compatability.
@@ -39,6 +39,51 @@ except:
 from .pdx import *
 
 import os
+
+import ctypes
+from ctypes import wintypes
+
+LPSTR = POINTER(CHAR)
+
+GetMappedFileNameA = ctypes.windll.psapi.GetMappedFileNameA
+GetMappedFileNameA.argtypes = (wintypes.HANDLE, wintypes.LPVOID, LPSTR, wintypes.DWORD)
+GetMappedFileNameA.restype = wintypes.BOOL
+
+CreateFileMappingA = ctypes.windll.kernel32.CreateFileMappingA
+CreateFileMappingA.argtypes = (wintypes.HANDLE, wintypes.LPVOID, wintypes.DWORD, wintypes.DWORD, wintypes.DWORD, LPSTR)
+CreateFileMappingA.restype = wintypes.HANDLE
+
+GetCurrentProcess = ctypes.windll.kernel32.GetCurrentProcess
+GetCurrentProcess.restype = wintypes.HANDLE
+
+OpenProcessToken = ctypes.windll.advapi32.OpenProcessToken
+OpenProcessToken.argtypes = (wintypes.HANDLE, wintypes.DWORD, ctypes.POINTER(wintypes.HANDLE))
+OpenProcessToken.restype = wintypes.BOOL
+
+IsWow64Process = ctypes.windll.kernel32.IsWow64Process
+IsWow64Process.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.BOOL)]
+IsWow64Process.restype = wintypes.BOOL
+
+GetCurrentProcess = ctypes.windll.kernel32.GetCurrentProcess
+GetCurrentProcess.argtypes = []
+GetCurrentProcess.restype = wintypes.BOOL
+
+ReadProcessMemory = ctypes.windll.kernel32.ReadProcessMemory
+ReadProcessMemory.argtypes = [HANDLE, LPVOID, LPVOID, c_size_t, POINTER(c_size_t)]
+
+VirtualProtectEx = ctypes.windll.kernel32.VirtualProtectEx
+VirtualProtectEx.argtypes = [wintypes.HANDLE, LPVOID, c_size_t, wintypes.DWORD, POINTER(wintypes.DWORD)]
+VirtualProtectEx.restype = wintypes.BOOL
+
+Module32First = ctypes.windll.kernel32.Module32First
+Module32First.argtypes = (wintypes.HANDLE, POINTER(MODULEENTRY32))
+Module32First.restype = wintypes.BOOL
+
+OpenProcessToken = ctypes.windll.advapi32.OpenProcessToken
+OpenProcessToken.argtypes = (wintypes.HANDLE, wintypes.DWORD, ctypes.POINTER(wintypes.HANDLE))
+OpenProcessToken.restype = wintypes.BOOL
+
+####################################################################################################################
 
 class system_dll:
     '''
@@ -77,12 +122,11 @@ class system_dll:
 
         # calculate the file size of the
         file_size_hi = c_ulong(0)
-        file_size_lo = 0
         file_size_lo = kernel32.GetFileSize(handle, byref(file_size_hi))
         self.size    = (file_size_hi.value << 8) + file_size_lo
 
         # create a file mapping from the dll handle.
-        file_map = kernel32.CreateFileMappingA(handle, 0, PAGE_READONLY, 0, 1, 0)
+        file_map = kernel32.CreateFileMappingA(handle, c_void_p(0), c_ulong(PAGE_READONLY), c_ulong(0), c_ulong(1), b"")
 
         if file_map:
             # map a single byte of the dll into memory so we can query for the file name.
@@ -92,10 +136,10 @@ class system_dll:
             if file_ptr:
                 # query for the filename of the mapped file.
                 filename = create_string_buffer(2048)
-                psapi.GetMappedFileNameA(kernel32.GetCurrentProcess(), file_ptr, byref(filename), 2048)
+                psapi.GetMappedFileNameA(kernel32.GetCurrentProcess(), file_ptr, filename, c_ulong(2048))
 
                 # store the full path. this is kind of ghetto, but i didn't want to mess with QueryDosDevice() etc ...
-                self.path = os.sep + filename.value.split(os.sep, 3)[3]
+                self.path = b"\\" + filename.value.split(b"\\", 3)[3]
 
                 # store the file name.
                 # XXX - this really shouldn't be failing. but i've seen it happen.
